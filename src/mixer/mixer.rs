@@ -1,6 +1,4 @@
-mod channel;
-
-use channel::Channel;
+use super::channel::Channel;
 
 struct Mixer {
     channels: Vec<Channel>,

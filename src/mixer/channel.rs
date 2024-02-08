@@ -1,8 +1,8 @@
-struct Channel {
-    samples: Vec<i16>,
-    volume: f32,
-    gain: f32,
-    filter_value: f32, // -1 to 1 for LPF to HPF
+pub struct Channel {
+    pub samples: Vec<i16>,
+    pub volume: f32,
+    pub gain: f32,
+    pub filter_value: f32, // -1 to 1 for LPF to HPF
 }
 
 impl Channel {

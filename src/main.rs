@@ -1,4 +1,4 @@
-mod adsr_envelope;
+mod envelope;
 mod oscillator;
 
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
@@ -11,7 +11,7 @@ use adsr_envelope::AdsrEnvelope;
 use oscillator::Oscillator;
 
 const SAMPLE_RATE: u32 = 44100; // Sample rate in Hz
-const TONE_HZ: f32 = 60.0; // Frequency of A4 note
+const TONE_HZ: f32 = 70.0; // Frequency of A4 note
 const VOLUME: f32 = 1.0; // Volume (0.0 to 1.0)
 const DURATION: u32 = 800; // Duration in ms
 
@@ -82,26 +82,21 @@ fn main() -> Result<(), Error> {
         VOLUME,
     );
 
-    o.square_wave();
+    o.sine_wave();
 
     // Create an ADSR envelope for amplitude modulation (AM)
     let am_envelope = AdsrEnvelope::new(
         Duration::from_millis(2),   // Short attack for punch
-        Duration::from_millis(0),   // Short decay
-        0.52,                       // Low sustain for a quick fade-out
-        Duration::from_millis(222), // Short release
+        Duration::from_millis(255), // Short decay
+        0.0,                        // Low sustain for a quick fade-out
+        Duration::from_millis(0),   // Short release
+        Some(-0.5),                 // Concave decay curve
     );
 
-    // Create an ADSR envelope for frequency modulation (FM)
-    let fm_envelope = AdsrEnvelope::new(
-        Duration::from_millis(2),  // Short attack
-        Duration::from_millis(72), // Shorter decay to quickly drop the pitch
-        0.0,                       // Zero sustain to avoid prolonged frequency change
-        Duration::from_millis(0),  // Short release
-    );
-
-    o.fm(|t| fm_envelope.amplitude(t, Duration::from_millis(132)) * 2.5);
-    o.am(|t| am_envelope.amplitude(t, Duration::from_millis(320)));
+    o.am(|m| {
+        println!("{}", am_envelope.amplitude());
+        return 1.0;
+    });
 
     let sine_wave_samples = Arc::new(o.samples);
     let sine_wave_samples_clone = Arc::clone(&sine_wave_samples);

@@ -8,3 +8,6 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.76"
 cpal = "0.15.2"
+jack = "0.11.4"
+nanoid = "0.4.0"
+tokio = "1.36.0"

@@ -1,2 +1,1 @@
-pub mod bpm;
-pub mod time_signature;
+pub mod rhythm;

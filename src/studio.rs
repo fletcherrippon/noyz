@@ -1,11 +1,11 @@
 // noyz.rs
-use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
+use cpal::{
+    traits::{DeviceTrait, HostTrait},
+    Device, Host,
+};
 use std::time;
 
-use super::types::{
-    bpm::{Beats, BPM},
-    time_signature::TimeSignatures,
-};
+use super::types::rhythm::tempo::tempo::Tempo;
 
 struct Loop {
     start: [u32; 2],
@@ -13,36 +13,132 @@ struct Loop {
     active: bool,
 }
 
-pub struct Config {
-    pub bpm: Beats,
-    pub time_signature: TimeSignatures, // You might want to create a more specific type here
+pub struct Audio {
+    pub host: Host,
+    pub input: Device,
+    pub output: Device,
 }
 
-pub struct Studio {
-    pub bpm: BPM,
-    pub start_time: time::Instant,
-    pub current_time: time::Duration,
-    pub sample_rate: u32,
-    pub volume: f32,
+impl Default for Audio {
+    fn default() -> Self {
+        let host = cpal::default_host();
+        let input = host.default_input_device().unwrap();
+        let output = host.default_output_device().unwrap();
+
+        Audio {
+            host,
+            input,
+            output,
+        }
+    }
 }
 
-impl Studio {
-    pub fn new(config: Config) -> Studio {
-        Studio {
-            bpm: BPM::new(config.bpm),
-            start_time: time::Instant::now(),
-            current_time: time::Duration::new(0, 0),
-            sample_rate: 44100,
-            volume: 1.0,
+impl Audio {
+    pub fn new<I: Into<Option<Device>>, O: Into<Option<Device>>>(input: I, output: O) -> Self {
+        let host = cpal::default_host();
+        let input = match input.into() {
+            Some(input) => input,
+            None => host.default_input_device().unwrap(),
+        };
+        let output = match output.into() {
+            Some(output) => output,
+            None => host.default_output_device().unwrap(),
+        };
+
+        Audio {
+            host,
+            input,
+            output,
         }
     }
 
-    pub fn set_bpm(&mut self, bpm: Beats) {
-        self.bpm.set_bpm(bpm);
+    pub fn list_drivers(&self) {
+        let hosts = cpal::available_hosts();
+
+        println!("Available Drivers:");
+        for host_id in hosts {
+            // The `name` method is called on `HostId`, not on `Host`
+            println!("\t{}", host_id.name());
+        }
     }
 
-    pub fn set_sample_rate(&mut self, sample_rate: u32) {
-        self.sample_rate = sample_rate;
+    pub fn list_input_devices(&self) {
+        let inputs = self.host.input_devices().unwrap();
+
+        println!("Input Devices: ");
+        for input in inputs {
+            // print input devices
+            println!("\t{}", input.name().unwrap());
+        }
+    }
+
+    pub fn list_output_devices(&self) {
+        let outputs = self.host.output_devices().unwrap();
+
+        println!("Output Devices: ");
+        for output in outputs {
+            // print output devices
+            println!("\t{}", output.name().unwrap());
+        }
+    }
+
+    pub fn list_devices(&self) {
+        self.list_input_devices();
+        self.list_output_devices();
+    }
+}
+
+pub struct Config {
+    pub tempo: Tempo,
+    pub audio: Audio,
+}
+
+impl Default for Config {
+    fn default() -> Self {
+        Config {
+            tempo: Tempo::default(),
+            audio: Audio::default(),
+        }
+    }
+}
+
+pub struct Studio {
+    pub tempo: Tempo,
+    pub audio: Audio,
+    pub start_time: time::Instant,
+    pub current_time: time::Duration,
+    pub volume: f32,
+}
+
+impl Default for Studio {
+    fn default() -> Self {
+        Studio {
+            tempo: Tempo::default(),
+            audio: Audio::default(),
+            start_time: time::Instant::now(),
+            current_time: time::Duration::new(0, 0),
+            volume: 1.0,
+        }
+    }
+}
+
+impl Studio {
+    pub fn new<C: Into<Option<Config>>>(config: C) -> Studio {
+        match config.into() {
+            Some(config) => Studio {
+                tempo: config.tempo,
+                audio: config.audio,
+                start_time: time::Instant::now(),
+                current_time: time::Duration::new(0, 0),
+                volume: 1.0,
+            },
+            None => Studio::default(),
+        }
+    }
+
+    // Constructor that optionally takes a configuration
+    pub fn with_default_config() -> Studio {
+        Studio::new(None)
     }
 
     pub fn set_volume(&mut self, volume: f32) {
@@ -56,16 +152,5 @@ impl Studio {
     pub fn reset_time(&mut self) {
         self.start_time = time::Instant::now();
         self.current_time = time::Duration::new(0, 0);
-    }
-
-    pub fn time_to_beats(&self, time: time::Duration) -> f32 {
-        let seconds = time.as_secs_f32();
-        let beats = seconds / 60.0 / self.bpm.bpm;
-        beats
-    }
-
-    pub fn beats_to_time(&self, beats: f32) -> time::Duration {
-        let seconds = beats * 60.0 * self.bpm.bpm;
-        time::Duration::from_secs_f32(seconds)
     }
 }

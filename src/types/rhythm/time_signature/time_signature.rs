@@ -15,8 +15,14 @@ pub enum TimeSignatures {
     FourFour,
 }
 
+impl Default for TimeSignatures {
+    fn default() -> Self {
+        TimeSignatures::CommonTime
+    }
+}
+
 impl TimeSignatures {
-    fn beats(&self) -> u8 {
+    pub fn beats(&self) -> u8 {
         match self {
             TimeSignatures::ShuffleTime | &TimeSignatures::ThreeFour => 3,
             TimeSignatures::CommonTime | &TimeSignatures::FourFour => 4,
@@ -24,7 +30,7 @@ impl TimeSignatures {
         }
     }
 
-    fn note(&self) -> u8 {
+    pub fn note(&self) -> u8 {
         match self {
             TimeSignatures::ShuffleTime => 8,
             TimeSignatures::CommonTime | TimeSignatures::CutTime | TimeSignatures::TwoTwo => 4,
@@ -32,7 +38,7 @@ impl TimeSignatures {
         }
     }
 
-    fn note_name(&self) -> &'static str {
+    pub fn note_name(&self) -> &'static str {
         match self {
             TimeSignatures::ShuffleTime => "8th",
             TimeSignatures::CommonTime | TimeSignatures::CutTime | TimeSignatures::TwoTwo => "4th",
@@ -40,7 +46,7 @@ impl TimeSignatures {
         }
     }
 
-    fn name(&self) -> &'static str {
+    pub fn name(&self) -> &'static str {
         match self {
             TimeSignatures::ShuffleTime => "Shuffle Time",
             TimeSignatures::CommonTime => "Common Time",

@@ -1,15 +1,18 @@
 use noyz::{
     studio::{Config, Studio},
-    types::time_signature::TimeSignatures,
+    types::rhythm::{tempo::tempo::Tempo, time_signature::time_signature::TimeSignatures},
 };
 
 fn main() {
     let config = Config {
-        bpm: 120.0,
-        time_signature: TimeSignatures::FourFour,
+        tempo: Tempo::new(120.0, TimeSignatures::ThreeFour),
+        ..Default::default()
     };
 
     let noyz = Studio::new(config);
 
-    println!("BPM: {}", noyz.bpm.seconds_per_beat().as_secs_f32());
+    println!("BPM: {}", noyz.tempo.bars_to_time(1.0).as_secs_f32());
+
+    noyz.audio.list_drivers();
+    noyz.audio.list_devices();
 }
